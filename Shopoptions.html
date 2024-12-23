@@ -422,7 +422,7 @@
         async function initializeApp() {
             showLoading(true);
 
-            //await initializeLiff(); // เรียกใช้งาน LIFF และดึงข้อมูลผู้ใช้
+            await initializeLiff(); // เรียกใช้งาน LIFF และดึงข้อมูลผู้ใช้
 
             try {
                 const [productsData, shippingData, bannersData] = await Promise.all([
@@ -804,7 +804,7 @@
 
         function createProductElement(product) {
             const productDiv = document.createElement('div');
-            productDiv.classList.add('bg-main', 'flex', 'flex-col', 'rounded-xl', 'border-2', 'shadow-sm', 'relative');
+            productDiv.classList.add('bg-main', 'flex', 'flex-col', 'rounded-xl', 'shadow-sm', 'relative');
 
             const imgContainer = document.createElement('div');
             imgContainer.classList.add('relative');
@@ -819,7 +819,7 @@
 
             // ปุ่มแชร์ตัวอย่าง
             const shareBtn = document.createElement('button');
-            shareBtn.classList.add('bg-main', 'text-main2', 'text-xs', 'p-2', 'rounded-r-xl', 'focus:outline-none', 'focus:ring-2', 'absolute', 'top-2', 'right-2', 'z-10');
+            shareBtn.classList.add('bg-main', 'text-main2', 'text-sm', 'px-2', 'py-1', 'rounded-r-xl', 'focus:outline-none', 'focus:ring-2', 'absolute', 'top-2', 'right-2', 'z-10');
             shareBtn.textContent = 'แชร์';
             shareBtn.addEventListener('click', function () {
                 shareProduct(product);
