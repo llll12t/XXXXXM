@@ -158,6 +158,7 @@
         }
     </style>
 </head>
+
 <body class="bg-slate-100">
     <!-- Loading Screen -->
     <div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-[#F5F8FD] z-50">
@@ -816,14 +817,37 @@
             productImg.setAttribute('data-id', product.id);
             imgContainer.appendChild(productImg);
 
-            // ปุ่มแชร์ตัวอย่าง (จากโค้ดก่อนหน้า)
+            // ปุ่มแชร์ตัวอย่าง
             const shareBtn = document.createElement('button');
-            shareBtn.classList.add('bg-main', 'text-main2', 'text-xs', 'p-2', 'rounded-xl', 'focus:outline-none', 'focus:ring-2', 'absolute', 'top-2', 'right-2');
+            shareBtn.classList.add('bg-main', 'text-main2', 'text-xs', 'p-2', 'rounded-xl', 'focus:outline-none', 'focus:ring-2', 'absolute', 'top-2', 'right-2', 'z-10');
             shareBtn.textContent = 'แชร์';
             shareBtn.addEventListener('click', function () {
                 shareProduct(product);
             });
             imgContainer.appendChild(shareBtn);
+
+            // สร้างแบรนด์ราคา
+            let finalPrice = product.Price;
+            if (product.Discount && product.Discount > 0 && product.Discount < product.Price) {
+                finalPrice = product.Discount;
+            }
+
+            const priceBadge = document.createElement('div');
+            priceBadge.classList.add(
+                'absolute',
+                'top-2',
+                'right-12', // ปรับตำแหน่งให้ไม่ซ้อนกับปุ่มแชร์
+                'bg-red-500',
+                'text-white',
+                'px-2',
+                'py-1',
+                'rounded',
+                'text-sm',
+                'font-semibold',
+                'z-10'
+            );
+            priceBadge.textContent = `${finalPrice} บาท`;
+            imgContainer.appendChild(priceBadge);
 
             productDiv.appendChild(imgContainer);
 
@@ -849,7 +873,7 @@
             defaultOption.textContent = 'เลือกไซต์';
             sizeSelect.appendChild(defaultOption);
 
-           ['FS', 'S', 'M', 'L', 'XL', 'XXL'].forEach(function (size) {
+            ['FS', 'S', 'M', 'L', 'XL', 'XXL'].forEach(function (size) {
                 if (product[size] > 0) {
                     const option = document.createElement('option');
                     option.value = size;
@@ -861,20 +885,12 @@
             actionContainer.appendChild(sizeSelect);
 
             // ตรวจสอบว่ามีส่วนลดหรือไม่
-            let finalPrice = product.Price;
-            let priceDisplay = document.createElement('span');
-            priceDisplay.classList.add('font-semibold');
-
             if (product.Discount && product.Discount > 0 && product.Discount < product.Price) {
-                // มีส่วนลด
-                finalPrice = product.Discount;
-
-                // แสดงราคาก่อนลดเป็นข้อความขีดทับ
+                // มีส่วนลด แสดงราคาก่อนลดและหลังลด
                 const originalPriceText = document.createElement('div');
                 originalPriceText.classList.add('text-gray-500', 'text-xs', 'mr-2', 'line-through');
                 originalPriceText.textContent = `${product.Price} บาท`;
 
-                // แสดงราคาลดแล้วเป็นตัวหนา, สีเขียว
                 const discountedPriceText = document.createElement('div');
                 discountedPriceText.classList.add('text-[#4bc56b]', 'font-semibold', 'text-md');
                 discountedPriceText.textContent = `${finalPrice} บาท`;
@@ -885,11 +901,6 @@
                 priceContainer.appendChild(discountedPriceText);
 
                 actionContainer.appendChild(priceContainer);
-            } else {
-                // ไม่มีส่วนลด
-                priceDisplay.classList.add('text-[#4bc56b]');
-                priceDisplay.textContent = `${finalPrice} บาท`;
-                actionContainer.appendChild(priceDisplay);
             }
 
             const addToCartBtn = document.createElement('button');
@@ -904,6 +915,7 @@
 
             return productDiv;
         }
+
 
         async function shareProduct(product) {
             // แสดง popup ยืนยันก่อนแชร์
@@ -1108,6 +1120,8 @@
             <img src="${item['Img-product']}" alt="${item.name}" class="w-20 h-20 rounded-xl mr-4">
             <div class="flex-1">
                 <h3 class="text-md font-semibold">${item.name}</h3>
+                <p class="text-gray-600">ขนาด: ${item.size}</p>
+
                 ${(item.Discount && item.Discount > 0 && item.Discount < item.Price)
                         ? `<p class="text-gray-600 text-sm line-through">${item.Price} บาท</p>
                            <p class="text-[#4bc56b] text-md font-semibold">${itemPrice.toFixed(2)} บาท</p>`
