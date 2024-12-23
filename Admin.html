@@ -17,7 +17,7 @@
         <div class="mb-4">
             <!-- Sort Field -->
             <div class="flex justify-between">
-                <h1 class="text-md text-white font-bold">จัดการการสั่งซื้อ จัดส่งสินค้า</h1>
+                <h1 class="text-md font-bold">จัดการการสั่งซื้อ จัดส่งสินค้า</h1>
                 <select id="filter-sort" class="border px-2 py-1 rounded-xl">
                     <option value="desc">เรียงตาม ล่าสุด</option>
                     <option value="asc">เรียงตาม เก่าสุด</option>
@@ -27,7 +27,7 @@
 
         <!-- การ์ดแสดงข้อมูลที่ดึงจาก Google Sheets -->
         <div id="data-table-container" class="overflow-x-auto">
-            <table id="data-table" class="min-w-full border-collapse">
+            <table id="data-table" class="min-w-full border-collapse text-sm">
                 <thead class="bg-gray-300">
                     <tr>
                         <th class="px-4 py-2 text-left">วันที่</th>
@@ -224,7 +224,7 @@
         const actionRow = document.createElement('tr');
         const actionCell = document.createElement('td');
         actionCell.colSpan = 4;
-        actionCell.className = 'px-4 py-2 bg-gray-100';
+        actionCell.className = 'px-4 py-2 bg-gray-100 text-cente';
 
         // ปุ่ม ดูรายการ
         const viewButton = document.createElement('button');
