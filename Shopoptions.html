@@ -378,9 +378,9 @@
     <!-- สคริปต์หลัก -->
     <script defer>
         // ฟังก์ชันตั้งค่า
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzRF6plY3kobQzVM0UBS74wkFd04FJxs6e2dicNNZkc1oLftMM1-TbYMZPVoxASxNx7EQ/exec";
-        const WEB_MEMBER_APP_URL = "https://script.google.com/macros/s/AKfycbz8ArUt6Hj1E06QoeLYMRImPRrvcvSUnWyk1nVj07ryWkWdjbGw6NDJXcZsqchAH3Pw/exec";
-        const LIFF_ID = '2005629952-POXR9wLQ'; // เปลี่ยนเป็น LIFF ID ของคุณ
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyuz1I1AaFIpEtKlQuQNld9ue8BHbKzlPy5YQXpAeyomC979SYd0-jpzhthUF456ctxGw/exec";
+        const WEB_MEMBER_APP_URL = "https://script.google.com/macros/s/AKfycbwUj-dHVIxyjvudRS0cykoLTNx_8mLYC6zlSyamLjQP_rD2bTM1BFCtnvFOPYeDCzOBxw/exec";
+        const LIFF_ID = '2006699517-JN1XRWP2'; // เปลี่ยนเป็น LIFF ID ของคุณ
 
         // ตัวแปรหลัก
         let shippingOptions = [];
@@ -839,16 +839,17 @@
             actionContainer.classList.add('flex', 'justify-between', 'items-center');
 
             const sizeSelect = document.createElement('select');
-            sizeSelect.classList.add('bg-main', 'text-main2', 'rounded-xl', 'p-2', 'product-size', 'hidden');
+            sizeSelect.classList.add('bg-main', 'text-main2', 'rounded-xl', 'p-2', 'product-size');
             sizeSelect.setAttribute('data-id', product.id);
 
             const defaultOption = document.createElement('option');
-            defaultOption.value = 'online';
+            defaultOption.value = '';
             defaultOption.disabled = true;
             defaultOption.selected = true;
+            defaultOption.textContent = 'เลือกไซต์';
             sizeSelect.appendChild(defaultOption);
 
-            ['online'].forEach(function (size) {
+           ['FS', 'S', 'M', 'L', 'XL', 'XXL'].forEach(function (size) {
                 if (product[size] > 0) {
                     const option = document.createElement('option');
                     option.value = size;
