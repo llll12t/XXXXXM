@@ -33,16 +33,13 @@
         }
 
         .bg-main-cart {
-            background-color: #ef4444;
+            background-color: #27fa5f;
+            color: #000000;
         }
 
         .bg-main-gray {
             background-color: #efefef;
         }
-        .bg-main-cart {
-            background-color: #27FF5E;
-        }
-
         .text-main {
             color: #F5F8FD;
         }
@@ -425,7 +422,7 @@
         async function initializeApp() {
             showLoading(true);
 
-            await initializeLiff(); // เรียกใช้งาน LIFF และดึงข้อมูลผู้ใช้
+             await initializeLiff(); // เรียกใช้งาน LIFF และดึงข้อมูลผู้ใช้
 
             try {
                 const [productsData, shippingData, bannersData] = await Promise.all([
@@ -840,7 +837,7 @@
                 'absolute',
                 'top-2',
                 'right-12', // ปรับตำแหน่งให้ไม่ซ้อนกับปุ่มแชร์
-                'bg-red-500',
+                'bg-main2',
                 'text-white',
                 'px-2',
                 'py-1',
