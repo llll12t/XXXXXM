@@ -33,11 +33,14 @@
         }
 
         .bg-main-cart {
-            background-color: #192028;
+            background-color: #ef4444;
         }
 
         .bg-main-gray {
-            background-color: #e9e2e2;
+            background-color: #efefef;
+        }
+        .bg-main-cart {
+            background-color: #27FF5E;
         }
 
         .text-main {
@@ -159,7 +162,7 @@
     </style>
 </head>
 
-<body class="bg-slate-100">
+<body class="bg-main">
     <!-- Loading Screen -->
     <div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-[#F5F8FD] z-50">
         <div class="text-center">
@@ -180,7 +183,7 @@
         <div id="product-selection" class="max-w-md mx-auto pt-20">
             <div class="p-4 rounded-xl">
                 <!-- ส่วนหัวของร้านค้า -->
-                <div class="fixed top-0 left-0 w-full bg-main shadow-sm z-50">
+                <div class="fixed top-0 left-0 w-full bg-main border z-50">
                     <div class="flex justify-between items-center p-4">
                         <div class="flex items-center">
                             <div class="w-12 h-12 rounded-xl items-center">
@@ -211,10 +214,10 @@
                                 0
                             </p>
                             <button id="go-to-cart"
-                                class="bg-main-cart text-main text-md py-2 px-4 flex items-center gap-2 rounded-xl ml-4">
+                                class="bg-main-cart text-md py-2 px-4 flex items-center gap-2 rounded-xl ml-4">
                                 <!-- ไอคอนตะกร้าสินค้า -->
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"
-                                    color="#FFFFFF" fill="none">
+                                    color="#000000" fill="none">
                                     <path
                                         d="M11.5 8H20.196C20.8208 8 21.1332 8 21.3619 8.10084C22.3736 8.5469 21.9213 9.67075 21.7511 10.4784C21.7205 10.6235 21.621 10.747 21.4816 10.8132C20.9033 11.0876 20.4982 11.6081 20.3919 12.2134L19.7993 15.5878C19.5386 17.0725 19.4495 19.1943 18.1484 20.2402C17.1938 21 15.8184 21 13.0675 21H10.9325C8.18162 21 6.8062 21 5.8516 20.2402C4.55052 19.1942 4.46138 17.0725 4.20066 15.5878L3.60807 12.2134C3.50177 11.6081 3.09673 11.0876 2.51841 10.8132C2.37896 10.747 2.27952 10.6235 2.24894 10.4784C2.07874 9.67075 1.6264 8.5469 2.63812 8.10084C2.86684 8 3.17922 8 3.80397 8H7.5"
                                         stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -239,14 +242,14 @@
                 <div>
                     <!-- ส่วนแสดงหมวดหมู่สินค้า -->
                     <div class="flex">
-                        <div id="tab-nav" class="flex overflow-x-auto space-x-4 py-2">
+                        <div id="tab-nav" class="flex overflow-x-auto space-x-4 pb-2">
                             <!-- หมวดหมู่สินค้า -->
                         </div>
                     </div>
                     <!-- ช่องค้นหาสินค้า -->
                     <div class="relative ">
                         <input type="text" id="search-input" placeholder="ค้นหาสินค้า"
-                            class="w-full px-4 py-2 bg-main text-main border rounded-xl shadow-sm ">
+                            class="w-full px-4 py-2 bg-main border rounded-xl">
                     </div>
                     <!-- รายการสินค้า -->
                     <div id="product-list" class="grid grid-cols-2 gap-4 py-4">
@@ -263,7 +266,7 @@
         <div id="cart-view" class="max-w-md mx-auto pt-20 hidden">
             <div class="bg-main rounded-xl p-4 m-2">
                 <!-- ส่วนหัวของตะกร้าสินค้า -->
-                <div class="fixed top-0 left-0 w-full bg-main shadow-sm z-50">
+                <div class="fixed top-0 left-0 w-full bg-mainz-50">
                     <div class="flex justify-between items-center p-4">
                         <h2 class="text-main2 text-md font-semibold">ตะกร้าสินค้า</h2>
                         <div id="back-to-products"
@@ -307,7 +310,7 @@
         <div id="shipping-info" class="max-w-md mx-auto pt-20 hidden">
             <div class="p-4">
                 <!-- ส่วนหัวของการจัดส่ง -->
-                <div class="fixed top-0 left-0 w-full bg-main shadow-sm z-50">
+                <div class="fixed top-0 left-0 w-full bg-mainz-50">
                     <div class="flex justify-between items-center p-4">
                         <h2 class="text-main2 text-md font-semibold">การจัดส่ง</h2>
                         <button id="back-to-cart"
@@ -680,7 +683,7 @@
 
             categories.forEach(function (category) {
                 const tabButton = document.createElement('button');
-                tabButton.classList.add('flex-shrink-0', 'px-1', 'py-1', 'pr-2', 'rounded-xl', 'focus:outline-none', 'flex', 'items-center', 'justify-start', 'shadow-sm', 'space-x-2');
+                tabButton.classList.add('flex-shrink-0', 'px-1', 'py-1','pr-2', 'border', 'rounded-xl', 'focus:outline-none', 'flex', 'items-center', 'justify-start', 'space-x-2');
                 tabButton.setAttribute('data-category', category);
 
                 if (category === currentTab) {
@@ -804,7 +807,7 @@
 
         function createProductElement(product) {
             const productDiv = document.createElement('div');
-            productDiv.classList.add('bg-main', 'flex', 'flex-col', 'rounded-xl', 'shadow-sm', 'relative');
+            productDiv.classList.add('bg-main', 'flex', 'flex-col','border', 'rounded-xl','relative');
 
             const imgContainer = document.createElement('div');
             imgContainer.classList.add('relative');
@@ -904,7 +907,7 @@
             }
 
             const addToCartBtn = document.createElement('button');
-            addToCartBtn.classList.add('bg-main2', 'text-main', 'p-2', 'rounded-xl', 'focus:outline-none', 'focus:ring-2', 'add-to-cart');
+            addToCartBtn.classList.add('bg-main-cart','p-2', 'rounded-xl', 'focus:outline-none', 'focus:ring-2', 'add-to-cart');
             addToCartBtn.style.width = '35%';
             addToCartBtn.textContent = 'ซื้อ';
             addToCartBtn.setAttribute('data-id', product.id);
