@@ -1,280 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>แสดงข้อมูลการสั่งซื้อ</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แสดงข้อมูลการสั่งซื้อ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .main-shop {
+            display: none;
+            /* ซ่อนในตอนเริ่มต้น */
+        }
+    </style>
 </head>
 
-<body class="bg-slate-100 min-h-screen p-6">
-  <div class="max-w-md m-auto">
-    <div class="mb-4">
-      <!-- Sort Field -->
-      <div class="flex justify-between">
-        <h1 class="text-md font-bold">จัดการการสั่งซื้อ จัดส่งสินค้า</h1>
-        <select id="filter-sort" class="border px-2 py-1 rounded-xl">
-          <option value="desc">เรียงตาม ล่าสุด</option>
-          <option value="asc">เรียงตาม เก่าสุด</option>
-        </select>
-      </div>
+<body class="bg-white min-h-screen p-6">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-[#F5F8FD] z-50">
+        <div class="text-center">
+            <div class="relative flex w-64 animate-pulse gap-2 p-4">
+                <div class="h-12 w-12 rounded-full bg-slate-400"></div>
+                <div class="flex-1">
+                    <div class="mb-1 h-5 w-3/5 rounded-lg bg-slate-400"></div>
+                    <div class="h-5 w-[90%] rounded-lg bg-slate-400"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ตาราง -->
-    <div id="data-table-container" class="overflow-x-auto">
-      <table id="data-table" class="min-w-full border-collapse text-sm">
-        <thead class="bg-gray-300">
-          <tr>
-            <th class="px-4 py-2 text-left">วันที่</th>
-            <th class="px-4 py-2 text-left">ชื่อ ลูกค้า</th>
-            <th class="px-4 py-2 text-left">ราคา</th>
-            <th class="px-4 py-2 text-left">สถานะ</th>
-            <th class="px-4 py-2 text-left">คำสั่ง</th>
-          </tr>
-        </thead>
-        <tbody id="data-tbody" class="bg-white">
-          <!-- แถวข้อมูลจะแทรกที่นี่โดย JS -->
-        </tbody>
-      </table>
+    <div class="main-shop">
+        <div class="max-w-md m-auto">
+            <div class="mb-4">
+                <!-- Sort Field -->
+                <div class="flex justify-between">
+                    <h1 class="text-md font-bold">จัดการการสั่งซื้อ จัดส่งสินค้า</h1>
+                    <select id="filter-sort" class="border px-2 py-1 rounded-xl">
+                        <option value="desc">เรียงตาม ล่าสุด</option>
+                        <option value="asc">เรียงตาม เก่าสุด</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ตารางแสดงข้อมูล -->
+            <div id="data-table-container" class="overflow-x-auto">
+                <table id="data-table" class="min-w-full border-collapse text-sm">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-medium border-b uppercase">วันที่</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium border-b uppercase">ชื่อ</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium border-b uppercase">ราคา</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium border-b uppercase">สถานะ</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium border-b uppercase">คำสั่ง</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-tbody" class="bg-white">
+                        <!-- แถวข้อมูลจะแทรกที่นี่โดย JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="flex justify-center mt-4">
+                <!-- Pagination buttons will be generated here -->
+            </div>
+
+            <!-- แสดงข้อความ "กำลังโหลดรายการ..." -->
+            <div id="loading-message" class="text-center text-gray-100 mb-4" style="display: none;">
+                กำลังโหลดรายการ...
+            </div>
+        </div>
     </div>
 
-    <!-- Pagination -->
-    <div id="pagination" class="flex justify-center mt-4"></div>
+    <!-- Script -->
+    <script>
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdUHOPhzdZLf-G0qz4WUjyV57RKFyFe7kRem4ieu3cRAO95wJ-ltpE15o2SSJvU3_H/exec';
+        const ROWS_PER_PAGE = 10;
+        let currentPage = 1;
+        let tableData = [];
+        let filteredData = [];
 
-    <!-- แสดงข้อความ "กำลังโหลดรายการ..." -->
-    <div id="loading-message" class="text-center text-gray-100 mb-4" style="display: none;">
-      กำลังโหลดรายการ...
-    </div>
-  </div>
+        window.onload = fetchData;
 
-
-  <!-- Modal สำหรับแก้ไข Express, TAX และ SEND -->
-  <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-4 rounded-xl w-full max-w-md">
-      <h2 class="text-xl mb-4">แก้ไข การจัดส่ง, เลขพัสดุ, เวลาจัดส่ง</h2>
-      <form id="edit-form">
-        <input type="hidden" id="edit-order-id">
-        <div class="mb-4">
-          <label for="edit-express" class="block text-sm">บริการจัดส่ง</label>
-          <select id="edit-express" class="w-full border px-2 py-1 rounded-xl">
-            <option value="kerry">Kerry</option>
-            <option value="flash">Flash</option>
-            <option value="thaipost">ThaiPost</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label for="edit-tax" class="block text-sm">เลขพัสดุ</label>
-          <input type="text" id="edit-tax" class="w-full border px-2 py-1 rounded-xl">
-        </div>
-        <div class="mb-4">
-          <label for="edit-send" class="block text-sm">เวลาจัดส่ง</label>
-          <input type="datetime-local" id="edit-send" class="w-full border px-2 py-1 rounded-xl">
-        </div>
-        <div class="flex justify-end">
-          <button type="button" class="bg-red-500 text-white py-1 px-3 rounded-xl hover:bg-red-700 mr-2"
-            onclick="closeModal()">ยกเลิก</button>
-          <button type="submit" class="bg-blue-500 text-white py-1 px-3 rounded-xl hover:bg-blue-700">
-            บันทึก
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-
-  <!-- Script -->
-  <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdUHOPhzdZLf-G0qz4WUjyV57RKFyFe7kRem4ieu3cRAO95wJ-ltpE15o2SSJvU3_H/exec';
-    const ROWS_PER_PAGE = 10;
-    let currentPage = 1;
-    let tableData = [];
-    let filteredData = [];
-
-    // โหลดข้อมูล
-    window.onload = fetchData;
-    async function fetchData() {
-      document.getElementById('loading-message').style.display = 'block';
-      try {
-        const response = await fetch(WEB_APP_URL);
-        const data = await response.json();
-        tableData = processOrders(data.slice(1));
-        filteredData = tableData;
-        applyFilters();
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถโหลดข้อมูลได้' });
-      } finally {
-        document.getElementById('loading-message').style.display = 'none';
-      }
-    }
-
-    // แปลงข้อมูลเป็นออบเจ็กต์
-    function processOrders(data) {
-      const processedData = [];
-      const orderMap = {};
-
-      data.forEach(row => {
-        // row[0] = orderId, row[1] = name, row[11] = totalPrice, row[13] = paymentStatus ฯลฯ
-        const orderId = row[0];
-        const totalOrder = parseFloat(row[10]);
-        const totalPrice = parseFloat(row[11]);
-        const rawTimestamp = row[12];
-        const timestamp = new Date(rawTimestamp);
-        const paymentStatus = row[13];
-        const express = row[14];
-        const tax = row[15];
-        const send = row[16] ? formatDate(row[16]) : '';
-
-        if (!orderMap[orderId]) {
-          orderMap[orderId] = {
-            orderId: orderId,
-            name: row[1],
-            address: row[2],
-            contact: row[3],
-            note: row[4],
-            totalOrder: totalOrder,
-            totalPrice: totalPrice,
-            timestamp: timestamp,
-            paymentStatus: paymentStatus,
-            express: express,
-            tax: tax,
-            send: send,
-            products: []
-          };
-        } else {
-          orderMap[orderId].totalOrder += totalOrder;
-          orderMap[orderId].totalPrice += totalPrice;
+        async function fetchData() {
+            showLoading(true);
+            try {
+                const response = await fetch(WEB_APP_URL);
+                const data = await response.json();
+                tableData = processOrders(data.slice(1));
+                filteredData = tableData;
+                applyFilters();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถโหลดข้อมูลได้'
+                });
+            } finally {
+                showLoading(false);
+            }
         }
 
-        orderMap[orderId].products.push({
-          idProduct: row[6],
-          product: row[7],
-          price: row[8],
-          size: row[9],
-          value: row[10],
-          totalOrder: totalOrder
-        });
-      });
+        function showLoading(isLoading) {
+            const loadingScreen = document.getElementById('loading-screen');
+            const mainShop = document.querySelector('.main-shop');
+            if (isLoading) {
+                loadingScreen.style.display = 'flex';
+                mainShop.style.display = 'none';
+            } else {
+                loadingScreen.style.display = 'none';
+                mainShop.style.display = 'block';
+            }
+        }
 
-      for (let orderId in orderMap) {
-        processedData.push(orderMap[orderId]);
-      }
-      return processedData;
-    }
+        function processOrders(data) {
+            const processedData = [];
+            const orderMap = {};
 
-    // แสดงอิโมจิสถานะ
-    function getStatusEmoji(status) {
-      if (status === 'ชำระเงินสำเร็จ') {
-        return '✅';
-      } else if (!status) {
-        return '⚠️';
-      } else if (status === 'ยกเลิกสินค้า') {
-        return '❌';
-      } else {
-        return status; 
-      }
-    }
+            data.forEach(row => {
+                const orderId = row[0];
+                const totalOrder = parseFloat(row[10]);
+                const totalPrice = parseFloat(row[11]);
+                const rawTimestamp = row[12];
+                const timestamp = new Date(rawTimestamp);
+                const paymentStatus = row[13];
 
-    // จัดเรียง + แสดง
-    function applyFilters() {
-      const sortValue = document.getElementById('filter-sort').value;
-      filteredData.sort((a, b) => {
-        return sortValue === 'asc' 
-          ? a.timestamp - b.timestamp 
-          : b.timestamp - a.timestamp;
-      });
-      currentPage = 1;
-      displayData(filteredData);
-      renderPagination(filteredData.length);
-    }
+                if (!orderMap[orderId]) {
+                    orderMap[orderId] = {
+                        orderId: orderId,
+                        name: row[1],
+                        address: row[2],
+                        contact: row[3],
+                        note: row[4],
+                        totalOrder: totalOrder,
+                        totalPrice: totalPrice,
+                        timestamp: timestamp,
+                        paymentStatus: paymentStatus,
+                        products: []
+                    };
+                } else {
+                    orderMap[orderId].totalOrder += totalOrder;
+                    orderMap[orderId].totalPrice += totalPrice;
+                }
 
-    // สร้างตาราง
-    function displayData(data) {
-      const tbody = document.getElementById('data-tbody');
-      tbody.innerHTML = '';
+                orderMap[orderId].products.push({
+                    idProduct: row[6],
+                    product: row[7],
+                    price: row[8],
+                    size: row[9],
+                    value: row[10],
+                    totalOrder: totalOrder
+                });
+            });
 
-      const start = (currentPage - 1) * ROWS_PER_PAGE;
-      const end = start + ROWS_PER_PAGE;
-      const paginatedData = data.slice(start, end);
+            for (let orderId in orderMap) {
+                processedData.push(orderMap[orderId]);
+            }
+            return processedData;
+        }
 
-      paginatedData.forEach(order => {
-        // แถวหลัก
-        const mainRow = document.createElement('tr');
-        mainRow.className = 'border-b';
+        // ฟังก์ชันฟอร์แมตราคา ถ้า .00 ให้ตัดออก
+        function formatPrice(price) {
+            if (Number.isInteger(price)) {
+                return price.toString();
+            } else {
+                return String(price);
+            }
+        }
 
-        // (1) วันที่
-        const dateCell = document.createElement('td');
-        dateCell.className = 'px-4 py-2';
-        dateCell.textContent = formatDate(order.timestamp);
+        // แปลงสถานะเป็นอิโมจิ
+        function getStatusEmoji(status) {
+            if (status === 'ชำระเงินสำเร็จ') {
+                return '✅';  // จ่ายแล้ว
+            } else if (status === 'ยังไม่ชำระเงิน') {
+                return '⚠️'; // ยังไม่ได้ระบุ หรือยังไม่ชำระ
+            } else if (status === 'ยกเลิกสินค้า') {
+                return '❌'; // ยกเลิกสินค้า
+            } else {
+                return status; // สถานะอื่น ๆ (ถ้ามี)
+            }
+        }
 
-        // (2) ชื่อ
-        const nameCell = document.createElement('td');
-        nameCell.className = 'px-4 py-2';
-        nameCell.textContent = order.name;
+        function applyFilters() {
+            const filterSort = document.getElementById('filter-sort').value;
+            filteredData.sort((a, b) => {
+                return filterSort === 'asc'
+                    ? a.timestamp - b.timestamp
+                    : b.timestamp - a.timestamp;
+            });
+            currentPage = 1;
+            displayCards(filteredData);
+            renderPagination(filteredData.length);
+        }
 
-        // (3) ราคา
-        const priceCell = document.createElement('td');
-        priceCell.className = 'px-4 py-2';
-        priceCell.textContent = `${order.totalPrice.toFixed(2)} บาท`;
+        function displayCards(data) {
+            const tbody = document.getElementById('data-tbody');
+            tbody.innerHTML = '';
 
-        // (4) สถานะ (อิโมจิ)
-        const statusCell = document.createElement('td');
-        statusCell.className = 'px-4 py-2';
-        statusCell.textContent = getStatusEmoji(order.paymentStatus);
+            const start = (currentPage - 1) * ROWS_PER_PAGE;
+            const end = start + ROWS_PER_PAGE;
+            const paginatedData = data.slice(start, end);
 
-        // (5) ปุ่มคำสั่งเดียว
-        const commandCell = document.createElement('td');
-        commandCell.className = 'px-4 py-2 text-center';
+            paginatedData.forEach(order => {
+                // (1) แถวหลัก
+                const mainRow = document.createElement('tr');
 
-        const commandButton = document.createElement('button');
-        commandButton.textContent = 'คำสั่ง';
-        commandButton.className = 'bg-indigo-600 text-white py-1 px-3 rounded-xl hover:bg-indigo-700';
-        commandButton.onclick = () => toggleDetailRow(`detail-${order.orderId}`);
-        commandCell.appendChild(commandButton);
+                const dateCell = document.createElement('td');
+                dateCell.className = 'px-4 py-2';
+                dateCell.textContent = formatDate(order.timestamp);
 
-        // ประกอบแถวหลัก
-        mainRow.appendChild(dateCell);
-        mainRow.appendChild(nameCell);
-        mainRow.appendChild(priceCell);
-        mainRow.appendChild(statusCell);
-        mainRow.appendChild(commandCell);
-        tbody.appendChild(mainRow);
+                const nameCell = document.createElement('td');
+                nameCell.className = 'px-4 py-2';
+                nameCell.textContent = order.name;
 
-        // สร้างแถวรอง (detail row) ซ่อนอยู่
-        const detailRow = document.createElement('tr');
-        detailRow.id = `detail-${order.orderId}`;
-        detailRow.className = 'border-b hidden';
+                const priceCell = document.createElement('td');
+                priceCell.className = 'px-4 py-2';
+                priceCell.textContent = `${formatPrice(order.totalPrice)} บาท`;
 
-        const detailCell = document.createElement('td');
-        detailCell.colSpan = 5; // เพราะมี 5 คอลัมน์
-        detailCell.className = 'px-4 py-2 bg-gray-50';
+                const statusCell = document.createElement('td');
+                statusCell.className = 'px-4 py-2';
+                statusCell.textContent = getStatusEmoji(order.paymentStatus);
 
-        // ปุ่มต่าง ๆ ในแถวรอง
-        let btnHtml = `
-          <div class="flex flex-wrap gap-2">
-            <button 
-              class="bg-blue-500 text-white py-1 px-3 rounded-xl hover:bg-blue-700"
-              onclick="showDetails('${order.orderId}')"
-            >
-              ดูรายการ
-            </button>
-            <button 
-              class="bg-yellow-500 text-white py-1 px-3 rounded-xl hover:bg-yellow-700"
-              onclick="openEditModal('${order.orderId}')"
-            >
-              ส่งของ
-            </button>
+                // คอลัมน์ "คำสั่ง"
+                const commandCell = document.createElement('td');
+                commandCell.className = 'px-4 py-2 text-center';
+
+                const commandButton = document.createElement('button');
+                commandButton.textContent = '📋';
+                commandButton.className = 'bg-indigo-600 text-white py-1 px-3 rounded hover:bg-indigo-700';
+                commandButton.onclick = () => toggleDetails(`detail-${order.orderId}`);
+                commandCell.appendChild(commandButton);
+
+                mainRow.appendChild(dateCell);
+                mainRow.appendChild(nameCell);
+                mainRow.appendChild(priceCell);
+                mainRow.appendChild(statusCell);
+                mainRow.appendChild(commandCell);
+
+                tbody.appendChild(mainRow);
+
+                // (2) แถวรายละเอียด: ซ่อนอยู่ตอนแรก
+                const detailRow = document.createElement('tr');
+                detailRow.id = `detail-${order.orderId}`;
+                detailRow.className = 'border-b hidden';
+
+                const detailCell = document.createElement('td');
+                detailCell.colSpan = 5; // เรามี 5 คอลัมน์
+                detailCell.className = 'px-4 py-2 bg-gray-50';
+
+                let detailHtml = `
+          <div class="mb-2">
+            <p><strong>ชื่อ:</strong> ${order.name}</p>
+            <p><strong>เบอร์โทร:</strong> ${order.contact}</p>
+            <p><strong>ที่อยู่:</strong> ${order.address}</p>
+
+            <p><strong>หมายเหตุ:</strong> ${order.note || '-'}</p>
+          </div>
+          <div class="mb-2">
+            <p><strong>รายการสินค้า</strong></p>
         `;
 
-        // ปุ่มการชำระเงิน
-        const isPaid = (order.paymentStatus === 'ชำระเงินสำเร็จ');
-        btnHtml += `
-            <button
-              class="bg-gray-800 text-white py-1 px-3 rounded-xl hover:bg-gray-600 ${
-                isPaid ? 'opacity-50 cursor-not-allowed' : ''
-              }"
+                order.products.forEach(prod => {
+                    detailHtml += `
+            <div class="ml-4 mb-1">
+              <p><strong>สินค้า:</strong> ${prod.product} (${prod.price} บาท) x ${prod.totalOrder}</p>
+            </div>
+          `;
+                });
+
+                detailHtml += `
+          <p class="mt-2"><strong>รวมเป็นเงิน:</strong> ${formatPrice(order.totalPrice)} บาท</p>
+          <p><strong>เวลา:</strong> ${formatDate(order.timestamp)}</p>
+          </div>
+        `;
+
+                // ปุ่มการชำระเงิน (เท่านั้น)
+                const isPaid = (order.paymentStatus === 'ชำระเงินสำเร็จ');
+                detailHtml += `
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button 
+              class="bg-gray-800 text-white px-4 py-1 rounded hover:bg-gray-600 ${isPaid ? 'opacity-50 cursor-not-allowed' : ''}"
               ${isPaid ? 'disabled' : ''}
               onclick="if(!${isPaid}) { openPaymentOptions('${order.orderId}'); }"
             >
@@ -283,255 +290,139 @@
           </div>
         `;
 
-        detailCell.innerHTML = btnHtml;
-        detailRow.appendChild(detailCell);
-        tbody.appendChild(detailRow);
-      });
-    }
-
-    // toggle ซ่อน/แสดง detail row
-    function toggleDetailRow(id) {
-      const row = document.getElementById(id);
-      row.classList.toggle('hidden');
-    }
-
-    // Pagination
-    function renderPagination(totalRows) {
-      const totalPages = Math.ceil(totalRows / ROWS_PER_PAGE);
-      const pagination = document.getElementById('pagination');
-      pagination.innerHTML = '';
-
-      const maxPages = 3;
-      let startPage = Math.max(1, currentPage - 1);
-      let endPage = Math.min(totalPages, startPage + maxPages - 1);
-
-      if (endPage - startPage < maxPages - 1) {
-        startPage = Math.max(1, endPage - maxPages + 1);
-      }
-
-      if (startPage > 1) {
-        const prevButton = document.createElement('button');
-        prevButton.className = 'mx-1 px-3 py-1 bg-gray-300 rounded-xl';
-        prevButton.innerText = 'Prev';
-        prevButton.onclick = () => {
-          currentPage = startPage - 1;
-          displayData(filteredData);
-          renderPagination(totalRows);
-        };
-        pagination.appendChild(prevButton);
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        const pageButton = document.createElement('button');
-        pageButton.className = `mx-1 px-3 py-1 rounded-xl ${
-          i === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-300'
-        }`;
-        pageButton.innerText = i;
-        pageButton.onclick = () => {
-          currentPage = i;
-          displayData(filteredData);
-          renderPagination(totalRows);
-        };
-        pagination.appendChild(pageButton);
-      }
-
-      if (endPage < totalPages) {
-        const nextButton = document.createElement('button');
-        nextButton.className = 'mx-1 px-3 py-1 bg-gray-300 rounded-xl';
-        nextButton.innerText = 'Next';
-        nextButton.onclick = () => {
-          currentPage = endPage + 1;
-          displayData(filteredData);
-          renderPagination(totalRows);
-        };
-        pagination.appendChild(nextButton);
-      }
-    }
-
-    // format date
-    function formatDate(isoString) {
-      const date = new Date(isoString);
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      return `${day}/${month}/${year} ${hours}:${minutes}`;
-    }
-
-    // ดูรายการ (SweetAlert)
-    function showDetails(orderId) {
-      const order = tableData.find(o => o.orderId === orderId);
-      if (!order) {
-        Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูล', text: `ไม่พบข้อมูลสำหรับ Order ID: ${orderId}` });
-        return;
-      }
-      let htmlDetail = `
-        <div style="margin-bottom: 10px; font-size:14px; text-align: start;">
-          <strong>ข้อมูลการสั่งซื้อ</strong>
-          <p><strong>Order ID:</strong> ${order.orderId}</p>
-          <p><strong>ชื่อผู้สั่ง:</strong> ${order.name}</p>
-          <p><strong>ที่อยู่:</strong> ${order.address}</p>
-          <p><strong>เบอร์ติดต่อ:</strong> ${order.contact}</p>
-          <p><strong>หมายเหตุ:</strong> ${order.note}</p>
-        </div>
-        <div style="margin-bottom: 10px; font-size:14px; text-align: start;">
-          <strong>รายการสินค้า</strong>
-        </div>
-      `;
-      order.products.forEach(prod => {
-        htmlDetail += `
-          <div style="margin-bottom: 10px;font-size:14px;text-align: start;">
-            <div style="display: flex; justify-content: space-between;">
-              <div style="flex: 1; padding-right: 10px;">
-                <p><strong>สินค้า:</strong> ${prod.product}</p>
-                <p><strong>ราคา:</strong> ${prod.price} บาท</p>
-              </div>
-              <div style="flex: 1; padding-left: 10px;">
-                <p><strong>ไซต์:</strong> ${prod.size}</p>
-                <p><strong>จำนวน:</strong> ${prod.totalOrder} ชิ้น</p>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
-      htmlDetail += `
-        <div style="margin-top: 20px; font-size:14px; text-align: start;">
-          <strong>รวมเป็นเงิน:</strong> ${order.totalPrice.toFixed(2)} บาท
-        </div>
-        <div style="margin-top: 10px; font-size:14px; text-align: start;">
-          <strong>เวลาสั่งซื้อ:</strong> ${formatDate(order.timestamp)}
-        </div>
-      `;
-      Swal.fire({
-        title: `<div class="text-sm">รายละเอียดบิล Order ${orderId}</div>`,
-        html: htmlDetail,
-        confirmButtonText: 'ปิด'
-      });
-    }
-
-    // Modal: ส่งของ
-    function openEditModal(orderId) {
-      const order = tableData.find(o => o.orderId === orderId);
-      if (!order) {
-        Swal.fire({ icon: 'error', title: 'ไม่พบข้อมูล', text: `ไม่พบข้อมูลสำหรับ Order ID: ${orderId}` });
-        return;
-      }
-      document.getElementById('edit-order-id').value = order.orderId;
-      document.getElementById('edit-express').value = order.express;
-      document.getElementById('edit-tax').value = order.tax;
-      document.getElementById('edit-send').value = order.send
-        ? convertToDateTimeLocal(order.send)
-        : '';
-      document.getElementById('edit-modal').classList.remove('hidden');
-    }
-
-    document.getElementById('edit-form').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const orderId = document.getElementById('edit-order-id').value;
-      const express = document.getElementById('edit-express').value;
-      const tax = document.getElementById('edit-tax').value;
-      const send = document.getElementById('edit-send').value;
-
-      if (!orderId) {
-        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่พบ Order ID' });
-        return;
-      }
-      await updateData(orderId, express, tax, send);
-      closeModal();
-    });
-
-    async function updateData(orderId, express, tax, send) {
-      Swal.fire({
-        title: 'กำลังบันทึกข้อมูล...',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
+                detailCell.innerHTML = detailHtml;
+                detailRow.appendChild(detailCell);
+                tbody.appendChild(detailRow);
+            });
         }
-      });
-      try {
-        const response = await fetch(WEB_APP_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `method=updateOrderData&orderId=${encodeURIComponent(orderId)}&express=${encodeURIComponent(express)}&tax=${encodeURIComponent(tax)}&send=${encodeURIComponent(send)}`
-        });
-        const result = await response.text();
-        Swal.fire({
-          title: 'สำเร็จ',
-          text: result,
-          icon: 'success',
-          confirmButtonText: 'OK'
-        });
-        fetchData();
-      } catch (error) {
-        console.error('Error updating data:', error);
-        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถอัปเดตข้อมูลได้' });
-      }
-    }
 
-    function closeModal() {
-      document.getElementById('edit-modal').classList.add('hidden');
-    }
+        function renderPagination(totalRows) {
+            const totalPages = Math.ceil(totalRows / ROWS_PER_PAGE);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
 
-    // DateTimeLocal แปลงจาก dd/mm/yyyy hh:mm
-    function convertToDateTimeLocal(dateString) {
-      const [day, month, year, time] = dateString.split(/[/\s:]/);
-      return `${year}-${month}-${day}T${time}`;
-    }
+            const maxPages = 3;
+            let startPage = Math.max(1, currentPage - 1);
+            let endPage = Math.min(totalPages, startPage + maxPages - 1);
 
-    // การชำระเงิน
-    function openPaymentOptions(orderId) {
-      Swal.fire({
-        title: 'เลือกวิธีการชำระเงิน',
-        input: 'radio',
-        inputOptions: {
-          'ชำระเงินสำเร็จ': 'ชำระเงินสำเร็จ',
-          'ยกเลิกสินค้า': 'ยกเลิกสินค้า'
-        },
-        inputValidator: (value) => {
-          if (!value) return 'กรุณาเลือกวิธีการชำระเงิน!';
-        },
-        showCancelButton: true,
-        confirmButtonText: 'ยืนยัน',
-        cancelButtonText: 'ยกเลิก'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire({
-            title: 'กำลังอัปเดต...',
-            text: 'กรุณารอสักครู่',
-            allowOutsideClick: false,
-            didOpen: () => {
-              Swal.showLoading();
+            if (endPage - startPage < maxPages - 1) {
+                startPage = Math.max(1, endPage - maxPages + 1);
             }
-          });
-          updatePaymentStatus(orderId, result.value);
-        }
-      });
-    }
-    function updatePaymentStatus(orderId, paymentMethod) {
-      $.post(WEB_APP_URL, {
-        method: 'updateOrderData',
-        orderId: orderId,
-        payment: paymentMethod
-      }, function (response) {
-        Swal.fire({
-          icon: 'success',
-          title: 'อัปเดตสำเร็จ',
-          text: `สถานะการชำระเงินสำหรับ Order ID: ${orderId} ถูกอัปเดตเป็น ${paymentMethod}`
-        });
-        fetchData();
-      }).fail(function () {
-        Swal.fire({
-          icon: 'error',
-          title: 'เกิดข้อผิดพลาด',
-          text: 'ไม่สามารถอัปเดตสถานะการชำระเงินได้'
-        });
-      });
-    }
 
-    // เมื่อเปลี่ยนค่า sort
-    document.getElementById('filter-sort').addEventListener('change', applyFilters);
-  </script>
+            if (startPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.className = 'mx-1 px-3 py-1 bg-gray-300 rounded-xl';
+                prevButton.innerText = 'Prev';
+                prevButton.onclick = () => {
+                    currentPage = startPage - 1;
+                    displayCards(filteredData);
+                    renderPagination(totalRows);
+                };
+                pagination.appendChild(prevButton);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = `mx-1 px-3 py-1 rounded-xl ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-gray-300'}`;
+                pageButton.innerText = i;
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    displayCards(filteredData);
+                    renderPagination(totalRows);
+                };
+                pagination.appendChild(pageButton);
+            }
+
+            if (endPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.className = 'mx-1 px-3 py-1 bg-gray-300 rounded-xl';
+                nextButton.innerText = 'Next';
+                nextButton.onclick = () => {
+                    currentPage = endPage + 1;
+                    displayCards(filteredData);
+                    renderPagination(totalRows);
+                };
+                pagination.appendChild(nextButton);
+            }
+        }
+
+        // แปลงวันที่ให้สวยงาม
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        // Toggle แถวรายละเอียด
+        function toggleDetails(id) {
+            const detailRow = document.getElementById(id);
+            if (detailRow.classList.contains('hidden')) {
+                detailRow.classList.remove('hidden');
+            } else {
+                detailRow.classList.add('hidden');
+            }
+        }
+
+        // SweetAlert การชำระเงิน
+        function openPaymentOptions(orderId) {
+            Swal.fire({
+                title: 'เลือกวิธีการชำระเงิน',
+                input: 'radio',
+                inputOptions: {
+                    'ชำระเงินสำเร็จ': 'ชำระเงินสำเร็จ',
+                    'ยกเลิกสินค้า': 'ยกเลิกสินค้า'
+                },
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'กรุณาเลือกวิธีการชำระเงิน!';
+                    }
+                },
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'กำลังอัปเดต...',
+                        text: 'กรุณารอสักครู่',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    updatePaymentStatus(orderId, result.value);
+                }
+            });
+        }
+
+        // อัปเดตสถานะการชำระเงิน
+        function updatePaymentStatus(orderId, paymentMethod) {
+            $.post(WEB_APP_URL, {
+                method: 'updateOrderData',
+                orderId: orderId,
+                payment: paymentMethod
+            }, function (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'อัปเดตสำเร็จ',
+                    text: `สถานะการชำระเงินสำหรับ Order ID: ${orderId} ถูกอัปเดตเป็น ${paymentMethod}`
+                });
+                fetchData();
+            }).fail(function (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถอัปเดตสถานะการชำระเงินได้'
+                });
+            });
+        }
+
+        document.getElementById('filter-sort').addEventListener('change', applyFilters);
+    </script>
 </body>
+
 </html>
