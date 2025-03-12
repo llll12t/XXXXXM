@@ -321,7 +321,7 @@
         document.getElementById('userlineid').value = userId;
         document.getElementById('displayName').value = profile.displayName;
         document.getElementById('profileImage').src = profile.pictureUrl || 'https://via.placeholder.com/40?text=PROFILE';
-        // ดึงข้อมูลผู้ใช้เพิ่มเติมจาก WEB_MEMBER_APP_URL
+console.log("Fetching data for userId:", userId);
         await fetchData(userId);
       } catch (error) {
         console.error('Error getting profile data:', error);
